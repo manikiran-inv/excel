@@ -1,0 +1,49 @@
+name: Excel Diff
+
+on:
+  pull_request:
+    paths:
+      - "Book1.xlsx"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  compare:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          path: pr
+
+      - name: Checkout Base Branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          path: base
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install packages
+        run: |
+          pip install openpyxl
+
+      - name: Compare Excel
+        run: |
+          python pr/scripts/compare_excel.py \
+            base/Book1.xlsx \
+            pr/Book1.xlsx \
+            report.md
+
+      - name: Comment on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: report.md
